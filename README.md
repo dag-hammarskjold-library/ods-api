@@ -23,5 +23,11 @@ Gets files from ODS and imports them into DLX
 
 Usage (command line):
 ```bash
-ods-dlx --dlx_connect=<MDB connection string> --s3_key=<AWS key> --s3_key_id=<AWS key id> --s3_bucket=undl-files --symbol=A/RES/74/1
+ods-dlx --help
+```
+```bash
+ods-dlx --symbol=A/RES/74/1 --dlx_connect=<MDB connection string> --s3_key=<AWS key> --s3_key_id=<AWS key id> --s3_bucket=undl-files
+```
+```bash
+ods-dlx --list=list_of_symbols.txt --dlx_connect=<MDB connection string> --s3_key=<AWS key> --s3_key_id=<AWS key id> --s3_bucket=undl-files
 ```
