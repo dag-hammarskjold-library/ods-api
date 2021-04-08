@@ -1,4 +1,4 @@
-import logging
+import logging, re
 from argparse import ArgumentParser
 from dlx import DB as DLX
 from dlx.file import File, Identifier, S3, FileExists, FileExistsLanguageConflict, FileExistsIdentifierConflict
@@ -29,7 +29,7 @@ def run():
     DLX.connect(args.dlx_connect)
     S3.connect(args.s3_key_id, args.s3_key, args.s3_bucket)
     
-    symbols = [args.symbol] if args.symbol else [f.strip() for f in open(args.list).readlines()]
+    symbols = [args.symbol] if args.symbol else [re.split('\t', x)[0].strip() for x in open(args.list).readlines()]
     langs = [args.language] if args.language else LANG.keys()
     
     for sym in symbols:
@@ -43,7 +43,8 @@ def run():
                 logging.warning(f'{sym} {lang} not found in ODS')
                 continue
             except Exception as e:
-                raise e
+                logging.warning(e)
+                continue
                 
             isolang = LANG[lang]
                 
