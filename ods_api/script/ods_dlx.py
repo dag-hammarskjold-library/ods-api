@@ -1,6 +1,7 @@
 import logging, re
 from argparse import ArgumentParser
 from dlx import DB as DLX
+from dlx.marc import Bib, Query, Condition
 from dlx.file import File, Identifier, S3, FileExists, FileExistsLanguageConflict, FileExistsIdentifierConflict
 from dlx.util import ISO6391
 from ods_api import ODS, FileNotFound
@@ -20,6 +21,7 @@ def get_args():
     ap.add_argument('--list')
     ap.add_argument('--language', help='ODS language code')
     ap.add_argument('--overwrite', action='store_true')
+    ap.add_argument('--skip_check', action='store_true')
     
     return ap.parse_args()
 
@@ -33,8 +35,16 @@ def run():
     langs = [args.language] if args.language else LANG.keys()
     
     for sym in symbols:
+        bib = Bib.from_query(Condition('191', {'a': sym}).compile())
+        
+        if not bib and not args.skip_check:
+            logging.warning(f'Bib for document {sym} not found')
+            continue
+        
+        # capture symbols from the bib record (exclude those beginning with brackets)
+        symbols = filter(lambda x: x[0] != '[', (bib.get_values('191', 'a') + bib.get_values('191', 'z')))
+        
         for lang in langs:
-            
             logging.info(f'Getting {sym} {lang} ...')
                 
             try:
@@ -52,7 +62,7 @@ def run():
                 result = File.import_from_handle(
                     fh,
                     filename=File.encode_fn(sym, isolang, 'pdf'),
-                    identifiers=[Identifier('symbol', sym)],
+                    identifiers=[Identifier('symbol', s) for s in symbols],
                     languages=[isolang],
                     mimetype='application/pdf',
                     source='ods-importx',
