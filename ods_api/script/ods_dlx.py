@@ -1,5 +1,6 @@
 import logging, re
 from argparse import ArgumentParser
+from pymongo.collation import Collation
 from dlx import DB as DLX
 from dlx.marc import Bib, Query, Condition
 from dlx.file import File, Identifier, S3, FileExists, FileExistsLanguageConflict, FileExistsIdentifierConflict
@@ -35,14 +36,17 @@ def run():
     langs = [args.language] if args.language else LANG.keys()
     
     for sym in symbols:
-        bib = Bib.from_query(Condition('191', {'a': sym}).compile())
+        bib = Bib.from_query(Condition('191', {'a': sym}).compile(), collation=Collation(locale='en', strength=2))
         
         if not bib and not args.skip_check:
-            logging.warning(f'Bib for document {sym} not found')
+            logging.warning(f'Bib for document {sym} not found. Skipping.')
             continue
-        
-        # capture symbols from the bib record (exclude those beginning with brackets)
-        symbols = filter(lambda x: x[0] != '[', (bib.get_values('191', 'a') + bib.get_values('191', 'z')))
+        elif bib and not args.skip_check:
+            # capture symbols from the bib record (exclude those beginning with brackets)
+            ids = list(filter(lambda x: x[0] != '[', (bib.get_values('191', 'a') + bib.get_values('191', 'z'))))
+        else:
+            logging.warning(f'Bib for document {sym} not found with --skip_check enabled. Using {sym} as identifier')
+            ids = symbols
         
         for lang in langs:
             logging.info(f'Getting {sym} {lang} ...')
@@ -57,12 +61,12 @@ def run():
                 continue
                 
             isolang = LANG[lang]
-                
+            
             try:
                 result = File.import_from_handle(
                     fh,
                     filename=File.encode_fn(sym, isolang, 'pdf'),
-                    identifiers=[Identifier('symbol', s) for s in symbols],
+                    identifiers=[Identifier('symbol', s) for s in ids],
                     languages=[isolang],
                     mimetype='application/pdf',
                     source='ods-importx',
@@ -70,9 +74,9 @@ def run():
                 )
                 logging.info(f'OK - {result.id}')
             except FileExistsLanguageConflict as e:
-                logging.warning(e.message)
+                logging.warning(f'{e.message} X {isolang}')
             except FileExistsIdentifierConflict as e:
-                logging.warning(e.message)
+                logging.warning(f'{e.message} X {ids}')
             except FileExists:
                 logging.info('Already in the system')
             except:
