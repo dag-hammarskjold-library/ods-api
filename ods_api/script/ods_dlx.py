@@ -19,6 +19,7 @@ def get_args():
     ap.add_argument('--s3_key', required=True)
     ap.add_argument('--s3_bucket', required=True)
     ap.add_argument('--symbol')
+    ap.add_argument('--ods_symbol', help='The symbol used by ODS if it differs from the official symbol')
     ap.add_argument('--list')
     ap.add_argument('--language', help='ODS language code')
     ap.add_argument('--overwrite', action='store_true')
@@ -52,7 +53,7 @@ def run():
             logging.info(f'Getting {sym} {lang} ...')
                 
             try:
-                fh = ODS.download(sym, lang)
+                fh = ODS.download(sym if not args.ods_symbol else args.ods_symbol, lang)
             except FileNotFound:
                 logging.warning(f'{sym} {lang} not found in ODS')
                 continue
