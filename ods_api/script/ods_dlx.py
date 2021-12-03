@@ -1,4 +1,4 @@
-import logging, re
+import logging, re, json, boto3
 from argparse import ArgumentParser
 from pymongo.collation import Collation
 from dlx import DB as DLX
@@ -14,15 +14,29 @@ LANG = {'A': 'AR', 'C': 'ZH', 'E': 'EN', 'F': 'FR', 'R': 'RU', 'S': 'ES', 'O': '
 def get_args():
     ap = ArgumentParser()
     
-    ap.add_argument('--dlx_connect', required=True)
-    ap.add_argument('--s3_key_id', required=True)
-    ap.add_argument('--s3_key', required=True)
-    ap.add_argument('--s3_bucket', required=True)
-    ap.add_argument('--symbol')
-    ap.add_argument('--list')
+    g = ap.add_mutually_exclusive_group(required=True)
+    g.add_argument('--symbol')
+    g.add_argument('--list')
+
     ap.add_argument('--language', help='ODS language code')
     ap.add_argument('--overwrite', action='store_true')
     ap.add_argument('--skip_check', action='store_true')
+
+    # get from AWS if not provided
+    ssm = boto3.client('ssm')
+    
+    def param(name):
+        return ssm.get_parameter(Name=name)['Parameter']['Value']
+    
+    c = ap.add_argument_group(
+        title='credentials', 
+        description='these arguments are supplied by AWS SSM if AWS credentials are configured',
+        
+    )
+    c.add_argument('--dlx_connect', default=param('connect-string'))
+    c.add_argument('--s3_bucket', default=param('dlx-s3-bucket'))
+    c.add_argument('--gdoc_api_username', default=json.loads(param('gdoc-api-secrets'))['username'])
+    c.add_argument('--gdoc_api_password', default=json.loads(param('gdoc-api-secrets'))['password'])
     
     return ap.parse_args()
 
@@ -30,7 +44,7 @@ def run():
     args = get_args()
     
     DLX.connect(args.dlx_connect)
-    S3.connect(args.s3_key_id, args.s3_key, args.s3_bucket)
+    S3.connect(bucket=args.s3_bucket)
     
     symbols = [args.symbol] if args.symbol else [re.split('\t', x)[0].strip() for x in open(args.list).readlines()]
     langs = [args.language] if args.language else LANG.keys()
