@@ -14,13 +14,12 @@ LANG = {'A': 'AR', 'C': 'ZH', 'E': 'EN', 'F': 'FR', 'R': 'RU', 'S': 'ES', 'O': '
 
 def get_args():
     ap = ArgumentParser()
+
+    m = ap.add_mutually_exclusive_group(required=True)
+    m.add_argument('--symbol', help='The official symbol (as written in UNBIS)')
+    m.add_argument('--list', help='Text file with a list of symbols')
     
-    ap.add_argument('--s3_key_id', required=True)
-    ap.add_argument('--s3_key', required=True)
-    ap.add_argument('--s3_bucket', default='undl-files')
-    ap.add_argument('--symbol', help='The official symbol (as written in UNBIS)')
     ap.add_argument('--ods_symbol', help='The symbol used by ODS if it differs from the official symbol')
-    ap.add_argument('--list')
     ap.add_argument('--language', help='ODS language code')
     ap.add_argument('--overwrite', action='store_true')
     ap.add_argument('--skip_check', action='store_true')
@@ -33,9 +32,7 @@ def get_args():
         
     c = ap.add_argument_group('credentials', description='these arguments are automatically supplied by AWS SSM if AWS credentials are configured')
     c.add_argument('--dlx_connect', default=param('connect-string'), help='MongoDB connection string')
-    c.add_argument('--s3_key_id', default=os.environ['AWS_ACCESS_KEY_ID'], help='AWS key ID')
-    c.add_argument('--s3_key', default=os.environ['AWS_ACCESS_KEY'], help='AWS key')
-    c.add_argument('--s3_bucket', default=param('?'), help='S3 bucket')
+    c.add_argument('--s3_bucket', default=param('dlx-s3-bucket'), help='S3 bucket')
     
     return ap.parse_args()
 
@@ -43,7 +40,7 @@ def run():
     args = get_args()
     
     DLX.connect(args.dlx_connect)
-    S3.connect(args.s3_key_id, args.s3_key, args.s3_bucket)
+    S3.connect(bucket=args.s3_bucket)
     
     symbols = [args.symbol] if args.symbol else [re.split('\t', x)[0].strip() for x in open(args.list).readlines()]
     langs = [args.language] if args.language else LANG.keys()
