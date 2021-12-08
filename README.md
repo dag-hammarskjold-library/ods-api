@@ -19,15 +19,21 @@ fileobj = ODS.download('A/RES/74/1', 'E')
 
 #### Scripts
 > #### ods-dlx
-Gets files from ODS and imports them into DLX
+Gets files from ODS and imports them into DLX. 
+
+Credentials do not need to be supplied if AWS cerentials are found locally.
 
 Usage (command line):
 ```bash
 ods-dlx --help
 ```
 ```bash
-ods-dlx --symbol=A/RES/74/1 --dlx_connect=<MDB connection string> --s3_key=<AWS key> --s3_key_id=<AWS key id> --s3_bucket=undl-files
+ods-dlx --symbol A/RES/74/1
 ```
 ```bash
-ods-dlx --list=list_of_symbols.txt --dlx_connect=<MDB connection string> --s3_key=<AWS key> --s3_key_id=<AWS key id> --s3_bucket=undl-files
+ods-dlx --list list_of_symbols.txt
+```
+```bash
+# the symbol in ODS differs from the symbol in UNBIS:
+ods-dlx --symbol A/74/PV.1 --ods_symbol A/74/PV.1(OR)
 ```
