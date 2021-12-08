@@ -3,7 +3,7 @@ from boto3 import client as aws_client
 from argparse import ArgumentParser
 from pymongo.collation import Collation
 from dlx import DB as DLX
-from dlx.marc import Bib, Query, Condition
+from dlx.marc import Bib, Query, Condition, Or
 from dlx.file import File, Identifier, S3, FileExists, FileExistsLanguageConflict, FileExistsIdentifierConflict
 from dlx.util import ISO6391
 from ods_api import ODS, FileNotFound
@@ -46,7 +46,7 @@ def run():
     langs = [args.language] if args.language else LANG.keys()
     
     for sym in symbols:
-        bib = Bib.from_query(Condition('191', {'a': sym}).compile(), collation=Collation(locale='en', strength=2))
+        bib = Bib.from_query(Query(Or(Condition('191', {'a': sym}), Condition('191', {'z': sym}))), collation=Collation(locale='en', strength=2))
         
         if not bib and not args.skip_check:
             logging.warning(f'Bib for document {sym} not found. Skipping.')
