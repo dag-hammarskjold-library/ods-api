@@ -1,4 +1,5 @@
-import os, logging, re
+import os, logging, re, time
+from datetime import datetime, timedelta
 from boto3 import client as aws_client
 from argparse import ArgumentParser
 from pymongo.collation import Collation
@@ -31,7 +32,8 @@ def get_args():
         return None if os.environ.get('DLX_DL_TESTING') else ssm.get_parameter(Name=name)['Parameter']['Value']
         
     c = ap.add_argument_group('credentials', description='these arguments are automatically supplied by AWS SSM if AWS credentials are configured')
-    c.add_argument('--dlx_connect', default=param('connect-string'), help='MongoDB connection string')
+    c.add_argument('--connect', default=param('prodISSU-admin-connect-string'), help='MongoDB connection string')
+    c.add_argument('--database', default=param('prodISSU-admin-database-name'), help='Database name')
     c.add_argument('--s3_bucket', default=param('dlx-s3-bucket'), help='S3 bucket')
     
     return ap.parse_args()
@@ -39,7 +41,7 @@ def get_args():
 def run():
     args = get_args()
     
-    DLX.connect(args.dlx_connect)
+    DLX.connect(args.connect, database=args.database)
     S3.connect(bucket=args.s3_bucket)
     
     symbols = [args.symbol] if args.symbol else [re.split('\t', x)[0].strip() for x in open(args.list).readlines()]
@@ -59,15 +61,18 @@ def run():
             ids = symbols
         
         for lang in langs:
+            started = datetime.now()
             logging.info(f'Getting {sym} {lang} ...')
                 
             try:
                 fh = ODS.download(sym if not args.ods_symbol else args.ods_symbol, lang)
             except FileNotFound:
                 logging.warning(f'{sym} {lang} not found in ODS')
+                time.sleep(.5)
                 continue
             except Exception as e:
                 logging.warning(e)
+                time.sleep(.5)
                 continue
                 
             isolang = LANG[lang]
@@ -91,6 +96,9 @@ def run():
                 logging.info('Already in the system')
             except:
                 raise
+        
+            #if (datetime.now() - started) < timedelta(seconds=.5):
+            #    time.sleep(.5)
     
 ###
 
