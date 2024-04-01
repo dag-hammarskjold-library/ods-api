@@ -1,3 +1,5 @@
+"""Class ODS"""
+
 from tempfile import TemporaryFile
 from requests import Session
 
@@ -51,5 +53,7 @@ class ODS():
             else:
                 fileobj.seek(0)
                 return fileobj
+        elif response.status_code == 404:
+            raise Exception(f'Not found: {url}')
         else:
-            raise Exception('Request failed to {}'.format(url))
+            raise Exception("Request failed with status code {response.status_code}: {url}")
