@@ -20,11 +20,10 @@ setup(
     description = 'Download files from ODS',
     long_description = long_description,
     long_description_content_type = "text/markdown",
-    python_requires = '>=3.5',
+    python_requires = '>=3.8, <3.12',
     entry_points = {
         'console_scripts': [
             'ods-dlx=ods_api.script.ods_dlx:run'
         ]
     }
 )
-
