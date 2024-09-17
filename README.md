@@ -1,4 +1,6 @@
-#### Installation
+ods-api gets files from ODS and imports them into the dlx database. It can be run as a command line app, or imported into a Python script
+
+#### Installatioo
 From the command line:
 ```bash
 pip install git+https://github.com/dag-hammarskjold-library/ods-api
