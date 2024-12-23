@@ -48,8 +48,8 @@ def run():
     langs = [args.language] if args.language else LANG.keys()
     
     for sym in symbols:
-        bib = Bib.from_query(Query(Or(Condition('191', {'a': sym}), Condition('191', {'z': sym}))), collation=Collation(locale='en', strength=2))
-        
+        bib = Bib.from_query(Query(Or(Condition('191', {'a': sym}), Condition('191', {'z': sym}))))
+
         if not bib and not args.skip_check:
             logging.warning(f'Bib for document {sym} not found. Skipping.')
             continue
