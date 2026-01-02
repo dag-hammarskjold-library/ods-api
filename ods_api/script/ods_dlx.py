@@ -54,8 +54,8 @@ def run():
             logging.warning(f'Bib for document {sym} not found. Skipping.')
             continue
         elif bib and not args.skip_check:
-            # capture symbols from the bib record (exclude those beginning with brackets)
-            ids = list(filter(lambda x: x[0] != '[', (bib.get_values('191', 'a') + bib.get_values('191', 'z'))))
+            # capture symbols from the bib record
+            ids = bib.get_values('191', 'a') + bib.get_values('191', 'z')
         else:
             logging.warning(f'Bib for document {sym} not found with --skip_check enabled. Using {sym} as identifier')
             ids = symbols
