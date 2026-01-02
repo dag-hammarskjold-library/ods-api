@@ -9,18 +9,18 @@ with open("requirements.txt") as f:
 
 setup(
     name = 'ods_api',
-    version = '1.0.2',
+    version = '1.1',
     url = None,
     author = 'United Nations Dag Hammarskjöld Library',
     author_email = 'library-ny@un.org',
     license = 'http://www.opensource.org/licenses/bsd-license.php',
     packages = find_packages(exclude=['test']),
     #test_suite = 'test',
-    #install_requires = requirements,
+    install_requires = requirements,
     description = 'Download files from ODS',
     long_description = long_description,
     long_description_content_type = "text/markdown",
-    python_requires = '>=3.5',
+    python_requires = '>=3.10, <=3.14',
     entry_points = {
         'console_scripts': [
             'ods-dlx=ods_api.script.ods_dlx:run'
